@@ -105,7 +105,8 @@ function statusBadge(status) {
 // ── Active Nav Link ───────────────────────────────────────────
 
 document.addEventListener('DOMContentLoaded', () => {
-  const currentPage = window.location.pathname.split('/').pop();
+  let currentPage = window.location.pathname.split('/').pop();
+  if (!currentPage || currentPage === '') currentPage = 'index.html';
   document.querySelectorAll('.nav-links a').forEach(link => {
     if (link.getAttribute('href') === currentPage) {
       link.classList.add('active');
