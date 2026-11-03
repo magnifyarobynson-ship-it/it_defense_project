@@ -2,10 +2,10 @@
   "name": "task-manager",
   "version": "1.0.0",
   "description": "Simple Task/To-Do Manager with Node.js, Express and MongoDB",
-  "main": "backend/server.js",
+  "main": "Backend/server.js",
   "scripts": {
-    "start": "node backend/server.js",
-    "dev": "nodemon backend/server.js",
+    "start": "node Backend/server.js",
+    "dev": "nodemon Backend/server.js",
     "deploy": "git subtree push --prefix Frontend origin gh-pages"
   },
   "dependencies": {
