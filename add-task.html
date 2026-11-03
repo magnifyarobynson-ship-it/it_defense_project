@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Add Task — Task Manager</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="navbar-inner">
+      <a class="navbar-logo" href="index.html">✅ Task<span>Manager</span></a>
+      <ul class="nav-links">
+        <li><a href="index.html">🏠 Dashboard</a></li>
+        <li><a href="task-list.html">📋 All Tasks</a></li>
+        <li><a href="add-task.html">➕ Add Task</a></li>
+        <li><a href="completed.html">✔ Completed</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <div class="page-container">
+    <h1 class="page-title">➕ Add a New Task</h1>
+    <p class="page-subtitle">Fill in the details below to create a new task.</p>
+
+    <div class="card" style="max-width: 700px;">
+      <form id="add-task-form" novalidate>
+
+        <!-- Title -->
+        <div class="form-group">
+          <label for="title">📝 Task Title <span style="color:#EF4444;">*</span></label>
+          <input
+            type="text"
+            id="title"
+            placeholder="e.g. Buy groceries, Finish homework..."
+            maxlength="100"
+            autocomplete="off"
+          />
+          <span id="title-error" style="color:#EF4444; font-size:15px; display:none;">
+            ⚠ Please enter a task title.
+          </span>
+        </div>
+
+        <!-- Description -->
+        <div class="form-group">
+          <label for="description">📄 Description <span style="color:#9CA3AF; font-weight:400;">(optional)</span></label>
+          <textarea
+            id="description"
+            placeholder="Add more details about this task..."
+          ></textarea>
+        </div>
+
+        <!-- Due Date + Priority -->
+        <div class="form-row">
+          <div class="form-group">
+            <label for="dueDate">📅 Due Date <span style="color:#9CA3AF; font-weight:400;">(optional)</span></label>
+            <input type="date" id="dueDate" />
+          </div>
+
+          <div class="form-group">
+            <label for="priority">🔥 Priority</label>
+            <select id="priority">
+              <option value="Low">🟢 Low</option>
+              <option value="Medium" selected>🟡 Medium</option>
+              <option value="High">🔴 High</option>
+            </select>
+          </div>
+        </div>
+
+        <hr class="divider" />
+
+        <!-- Action Buttons -->
+        <div style="display: flex; gap: 14px; flex-wrap: wrap;">
+          <button type="submit" class="btn btn-primary" style="flex:1; min-width:160px;">
+            ✅ Save Task
+          </button>
+          <a href="index.html" class="btn btn-secondary" style="flex:1; min-width:160px; text-align:center; line-height:1.4;">
+            ✕ Cancel
+          </a>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="js/app.js"></script>
+  <script>
+    document.getElementById('add-task-form').addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const title       = document.getElementById('title').value.trim();
+      const description = document.getElementById('description').value.trim();
+      const dueDate     = document.getElementById('dueDate').value;
+      const priority    = document.getElementById('priority').value;
+      const titleError  = document.getElementById('title-error');
+      const submitBtn   = e.target.querySelector('button[type="submit"]');
+
+      // Validate
+      if (!title) {
+        titleError.style.display = 'block';
+        document.getElementById('title').focus();
+        return;
+      }
+      titleError.style.display = 'none';
+
+      // Disable button to prevent double-submit
+      submitBtn.disabled    = true;
+      submitBtn.textContent = '⏳ Saving...';
+
+      try {
+        await createTask({ title, description, dueDate, priority });
+        showToast('✅ Task added successfully!', 'success');
+        setTimeout(() => { window.location.href = 'task-list.html'; }, 1000);
+      } catch (err) {
+        showToast('❌ Failed to save task. Is the server running?', 'error');
+        submitBtn.disabled    = false;
+        submitBtn.textContent = '✅ Save Task';
+      }
+    });
+
+    // Hide error on input
+    document.getElementById('title').addEventListener('input', () => {
+      document.getElementById('title-error').style.display = 'none';
+    });
+  </script>
+
+</body>
+</html>
+
