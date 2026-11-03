@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard — Task Manager</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="navbar-inner">
+      <a class="navbar-logo" href="index.html">✅ Task<span>Manager</span></a>
+      <ul class="nav-links">
+        <li><a href="index.html">🏠 Dashboard</a></li>
+        <li><a href="task-list.html">📋 All Tasks</a></li>
+        <li><a href="add-task.html">➕ Add Task</a></li>
+        <li><a href="completed.html">✔ Completed</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <div class="page-container">
+
+    <h1 class="page-title">👋 Welcome to Task Manager</h1>
+    <p class="page-subtitle">Here's a quick overview of your tasks today.</p>
+
+    <!-- SUMMARY CARDS -->
+    <div class="summary-grid">
+      <div class="summary-card total">
+        <div class="count" id="count-total">0</div>
+        <div class="label">📦 Total Tasks</div>
+      </div>
+      <div class="summary-card pending">
+        <div class="count" id="count-pending">0</div>
+        <div class="label">⏳ Pending</div>
+      </div>
+      <div class="summary-card done">
+        <div class="count" id="count-done">0</div>
+        <div class="label">✅ Completed</div>
+      </div>
+    </div>
+
+    <!-- QUICK ACTION BUTTON -->
+    <div style="margin-bottom: 36px;">
+      <a href="add-task.html" class="btn btn-primary" style="font-size: 20px; padding: 18px 40px;">
+        ➕ &nbsp; Add a New Task
+      </a>
+    </div>
+
+    <!-- RECENT TASKS -->
+    <div class="card">
+      <div class="section-header">
+        <span class="section-title">🕐 Recent Tasks</span>
+        <a href="task-list.html" class="btn btn-outline btn-sm">View All →</a>
+      </div>
+
+      <div id="recent-tasks-list">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="js/app.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        const tasks   = await getAllTasks();
+        const pending = tasks.filter(t => t.status === 'pending');
+        const done    = tasks.filter(t => t.status === 'completed');
+
+        document.getElementById('count-total').textContent   = tasks.length;
+        document.getElementById('count-pending').textContent = pending.length;
+        document.getElementById('count-done').textContent    = done.length;
+
+        const container = document.getElementById('recent-tasks-list');
+        const recent    = tasks.slice(0, 5);
+
+        if (recent.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-icon">📭</div>
+              <h3>No tasks yet!</h3>
+              <p>You haven't added any tasks. Start by adding one.</p>
+              <a href="add-task.html" class="btn btn-primary">➕ Add Your First Task</a>
+            </div>`;
+          return;
+        }
+
+        recent.forEach(task => {
+          const overdue = task.status === 'pending' && isOverdue(task.dueDate);
+          container.innerHTML += `
+            <div class="task-card priority-${task.priority.toLowerCase()}">
+              <div class="task-card-info">
+                <div class="task-card-title">${task.title}</div>
+                <div class="task-card-meta">
+                  ${priorityBadge(task.priority)}
+                  ${statusBadge(task.status)}
+                  <span>${task.dueDate ? '📅 ' + formatDate(task.dueDate) : '📅 No due date'}</span>
+                  ${overdue ? '<span style="color:#EF4444; font-weight:700;">⚠ Overdue!</span>' : ''}
+                </div>
+              </div>
+              <div class="task-card-actions">
+                <a href="task-detail.html?id=${task._id}" class="btn btn-outline btn-sm">View</a>
+              </div>
+            </div>`;
+        });
+      } catch (err) {
+        document.getElementById('recent-tasks-list').innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">⚠️</div>
+            <h3>Cannot connect to server</h3>
+            <p>Make sure the backend is running: <strong>npm run dev</strong></p>
+          </div>`;
+      }
+    });
+  </script>
+
+</body>
+</html>
+

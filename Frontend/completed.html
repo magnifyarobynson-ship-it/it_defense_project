@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Completed Tasks — Task Manager</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="navbar-inner">
+      <a class="navbar-logo" href="index.html">✅ Task<span>Manager</span></a>
+      <ul class="nav-links">
+        <li><a href="index.html">🏠 Dashboard</a></li>
+        <li><a href="task-list.html">📋 All Tasks</a></li>
+        <li><a href="add-task.html">➕ Add Task</a></li>
+        <li><a href="completed.html">✔ Completed</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <div class="page-container">
+
+    <div class="section-header">
+      <div>
+        <h1 class="page-title">✅ Completed Tasks</h1>
+        <p class="page-subtitle">All tasks you've finished. Great job! 🎉</p>
+      </div>
+    </div>
+
+    <!-- SEARCH -->
+    <div class="search-bar" style="margin-bottom: 28px;">
+      <input
+        type="text"
+        id="search-input"
+        placeholder="🔍  Search completed tasks..."
+      />
+    </div>
+
+    <!-- TASK COUNT -->
+    <p style="color:#6B7280; font-size:16px; margin-bottom:16px;">
+      <strong id="task-count">0</strong> completed task(s)
+    </p>
+
+    <!-- COMPLETED TASKS LIST -->
+    <div id="completed-list">
+      <!-- Populated by JS -->
+    </div>
+
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="js/app.js"></script>
+  <script>
+    let searchTerm = '';
+
+    async function renderCompleted() {
+      const container = document.getElementById('completed-list');
+      container.innerHTML = '<p style="color:#6B7280; padding:20px;">Loading...</p>';
+
+      try {
+        let tasks = await getAllTasks({ status: 'completed' });
+
+        // Apply search
+        if (searchTerm) {
+          tasks = tasks.filter(t =>
+            t.title.toLowerCase().includes(searchTerm.toLowerCase())
+          );
+        }
+
+        document.getElementById('task-count').textContent = tasks.length;
+
+        if (tasks.length === 0) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-icon">🏁</div>
+              <h3>${searchTerm ? 'No matching completed tasks' : 'No completed tasks yet'}</h3>
+              <p>${searchTerm ? 'Try a different search term.' : 'Complete some tasks and they will appear here.'}</p>
+              <a href="task-list.html" class="btn btn-primary">📋 Go to Task List</a>
+            </div>`;
+          return;
+        }
+
+        container.innerHTML = tasks.map(task => {
+          const completedOn = task.completedAt ? formatDate(task.completedAt) : 'Unknown';
+          return `
+            <div class="task-card priority-${task.priority.toLowerCase()}" id="card-${task._id}" style="opacity:0.9;">
+              <div class="task-card-info">
+                <div class="task-card-title" style="text-decoration: line-through; color: #6B7280;">
+                  ${task.title}
+                </div>
+                <div class="task-card-meta">
+                  ${priorityBadge(task.priority)}
+                  <span class="badge badge-completed">✔ Completed</span>
+                  <span>✔ Finished: ${completedOn}</span>
+                  ${task.dueDate ? `<span>📅 Was due: ${formatDate(task.dueDate)}</span>` : ''}
+                </div>
+              </div>
+              <div class="task-card-actions">
+                <a href="task-detail.html?id=${task._id}" class="btn btn-outline btn-sm">👁 View</a>
+                <button class="btn btn-warning btn-sm" onclick="reopen('${task._id}')">↩ Reopen</button>
+                <button class="btn btn-danger btn-sm"  onclick="remove('${task._id}')">🗑 Delete</button>
+              </div>
+            </div>`;
+        }).join('');
+
+      } catch (err) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">⚠️</div>
+            <h3>Cannot connect to server</h3>
+            <p>Make sure the backend is running: <strong>npm run dev</strong></p>
+          </div>`;
+      }
+    }
+
+    async function reopen(id) {
+      await reopenTask(id);
+      showToast('↩ Task moved back to pending!', 'default');
+      renderCompleted();
+    }
+
+    async function remove(id) {
+      if (!confirm('Permanently delete this completed task?')) return;
+      await deleteTask(id);
+      showToast('🗑 Task deleted permanently.', 'error');
+      renderCompleted();
+    }
+
+    // Search
+    document.getElementById('search-input').addEventListener('input', e => {
+      searchTerm = e.target.value;
+      renderCompleted();
+    });
+
+    document.addEventListener('DOMContentLoaded', renderCompleted);
+  </script>
+
+</body>
+</html>
+
